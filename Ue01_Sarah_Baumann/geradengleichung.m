@@ -1,0 +1,1 @@
+function [m, b] = geradengleichung(in_x, in_y)  Dy = in_y(1,2) - in_y(1,1);  Dx = in_x(1,2) - in_x(1,1);  m = Dy ./ Dx;  b = in_y(1,1) - m * in_x(1,1);#  y = m*x + n;endfunction

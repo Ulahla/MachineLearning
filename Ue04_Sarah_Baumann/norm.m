@@ -1,0 +1,1 @@
+function [input_norm] = norm (input)  input_norm = (input .- min(input)) ./ (max(input) .- min(input));endfunction

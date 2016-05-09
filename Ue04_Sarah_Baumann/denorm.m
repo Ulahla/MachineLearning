@@ -1,0 +1,1 @@
+function [input_denorm] = denorm (norm ,input)  input_denorm = norm .* (max(input) - min(input)) + min(input);endfunction
