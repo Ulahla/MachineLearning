@@ -22,16 +22,23 @@
 ## Author: Sarah Baumann <sarahbaumann@Sarah-Baumanns-MacBook-Pro.local>
 ## Created: 2016-04-28
 
-function [theta_best, rmse_best] = regression (alpha, m, theta, iteration, mpg_predict, mpg_norm, norm)
-  rmse = 100;
+function [theta_best, rmse_best] = regression (alpha, m, theta, iteration, mpg_predict, mpg_norm, norm, plotsign)
+  rmse_best = 100;
+  pre_predict = mpg_predict;
+  axis([0,100,0,40])
+  xlabel("iterationen")
+  ylabel("RMSE")
+  hold();
   for i = 0 : iteration
-    diff = [mpg_predict .- mpg_norm];
+    diff = [pre_predict .- mpg_norm];
     delta_theta = norm' * diff;
     delta_theta_strich = (alpha/m) * delta_theta;
     #delta_theta_strich = delta_theta
     theta_new = theta' - delta_theta_strich;
-    rmse_temp = sqrt(sum((mpg_predict .- mpg_norm).^2)/ length(mpg_norm));
-    if(rmse > rmse_temp)
+    rmse_temp = sqrt(sum((pre_predict .- mpg_norm).^2)/ length(mpg_norm));
+    pre_predict = calculatePrediction(norm, theta_new', 0);
+    plot(i, rmse_temp, plotsign)
+    if(rmse_temp < rmse_best)
       theta_best = theta_new;
       rmse_best = rmse_temp;
     endif
