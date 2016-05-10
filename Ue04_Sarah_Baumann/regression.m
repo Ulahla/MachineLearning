@@ -29,7 +29,7 @@ function [theta_best, rmse_best] = regression (alpha, m, theta, iteration, mpg_p
     delta_theta = norm' * diff;
     delta_theta_strich = (alpha/m) * delta_theta;
     #delta_theta_strich = delta_theta
-    theta_new = theta' - delta_theta_strich
+    theta_new = theta' - delta_theta_strich;
     rmse_temp = sqrt(sum((mpg_predict .- mpg_norm).^2)/ length(mpg_norm));
     if(rmse > rmse_temp)
       theta_best = theta_new;
