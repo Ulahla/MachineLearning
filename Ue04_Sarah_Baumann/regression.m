@@ -22,25 +22,25 @@
 ## Author: Sarah Baumann <sarahbaumann@Sarah-Baumanns-MacBook-Pro.local>
 ## Created: 2016-04-28
 
-function [theta_best, rmse_best] = regression (alpha, m, theta, iteration, mpg_predict, mpg_norm, norm, plotsign)
+function [rmse_temp_matrix, theta_best] = regression (alpha, m, theta, iteration, mpg_predict, mpg_norm, norm, mpg)
   rmse_best = 100;
   pre_predict = mpg_predict;
-  axis([0,100,0,40])
-  xlabel("iterationen")
-  ylabel("RMSE")
-  hold();
-  for i = 0 : iteration
+  #
+  #hold;
+  for i = 0 : iteration-1
     diff = [pre_predict .- mpg_norm];
     delta_theta = norm' * diff;
     delta_theta_strich = (alpha/m) * delta_theta;
-    #delta_theta_strich = delta_theta
-    theta_new = theta' - delta_theta_strich;
-    rmse_temp = sqrt(sum((pre_predict .- mpg_norm).^2)/ length(mpg_norm));
-    pre_predict = calculatePrediction(norm, theta_new', 0);
-    plot(i, rmse_temp, plotsign)
+    theta_new = theta .- delta_theta_strich';
+    pre_predict_denorm = denorm(pre_predict, mpg);
+    rmse_temp = sqrt(sum((pre_predict_denorm .- mpg).^2)/ length(mpg));
+    rmse_temp_matrix(i+1,1) = rmse_temp;
+    pre_predict = calculatePrediction(norm, theta_new, 0);
+    theta = theta_new;
+    #plot(i, rmse_temp, plotsign)
     if(rmse_temp < rmse_best)
       theta_best = theta_new;
-      rmse_best = rmse_temp;
+      #rmse_best = rmse_temp;
     endif
   endfor
 endfunction
