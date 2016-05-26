@@ -1,1 +1,6 @@
 1463669490722	Rename type 'Ue05_Vorlage_Java'
+1463937099255	Rename field 'M'
+1463938555247	Extract method 'doTheCars'
+1463938733456	Extract method 'doTheCredit'
+1463939137029	Extract method 'doCredit'
+1463940358638	Extract method 'doTheMPG'

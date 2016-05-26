@@ -3,6 +3,8 @@ package de.htw.ml;
 import java.io.IOException;
 import java.util.Arrays;
 
+import javax.sound.midi.Sequence;
+
 import org.jblas.FloatMatrix;
 import org.jblas.util.Random;
 
@@ -15,40 +17,89 @@ import javafx.stage.Stage;
 
 public class Ue05_Sarah_Baumann extends Application {
 
-	public static final String title = "Line Chart";
-	public static final String xAxisLabel = "Car Index";
-	public static final String yAxisLabel = "mpg";
-	public static final int M = 392;
+	public static final String title = "Cars";
+	public static final String xAxisLabel = "Iterationen";
+	public static final String yAxisLabel = "rmse";
+	public static final int M_CARS = 392;
+	public static final int M_CREDIT = 1000;
+	public static final int ITERATIONEN = 100;
 	
 	public static void main(String[] args) throws IOException {
-		FloatMatrix cars = FloatMatrix.loadCSVFile("cars_jblas.csv");
-		FloatMatrix cars_norm = normalize(cars);
-		int[] liste = new int[] {0,1,2,3,4,5};
-		FloatMatrix cars_norm_ohnegpm = cars_norm.getColumns(liste);
-		FloatMatrix mpg_norm = cars_norm.getColumn(6);
-//		System.out.println(cars_norm_ohnegpm);
-		
+		Random.seed(7);
 
-		// TODO plotte die RMSE Werte
-		float[] mpg = cars.getColumn(6).toArray();
+		// CARS
+		FloatMatrix cars = FloatMatrix.loadCSVFile("cars_jblas.csv");
+		float[] Yval = cars.getColumn(6).toArray();
+		doTheMPG(cars);
 		
-		Random.seed(7);
-		Random.seed(7);
-		FloatMatrix theta = FloatMatrix.rand(6, 1);
-//		System.out.println(theta);
+		// GERMAN CREDIT
+		FloatMatrix credit = FloatMatrix.loadCSVFile("german_credit_jblas.csv");
+		doTheCredit(credit);
 		
-		FloatMatrix predict_one = calcPredict(cars_norm_ohnegpm, theta);
-//		System.out.println(predict_one.transpose());
-//		System.out.println(mpg_norm);
-		
+//		plot(credit_fourthAlpha[0].toArray());
+//		System.out.println(Arrays.toString(amount));
+//		plot(Yval); 
+	}
+
+
+
+	private static void doTheMPG(FloatMatrix cars) {
+		FloatMatrix cars_norm_ohnegpm = normalize(cars).getColumns(new int[] {0,1,2,3,4,5});
+		FloatMatrix mpg_norm = normalize(cars).getColumn(6);
+		FloatMatrix mpg = cars.getColumn(6);
+
+		FloatMatrix theta_cars = FloatMatrix.rand(6, 1);
+		FloatMatrix pre_prediction = calcPredict(cars_norm_ohnegpm, theta_cars);
+		System.out.println("Calculate the rmse for a mpg-prediction");
 		double alpha = 0.01;
-//		alpha, m, theta, iteration, mpg_predict, mpg_norm, norm, mpg)
+		FloatMatrix[] firstAlpha = regression(alpha, M_CARS, theta_cars, pre_prediction, mpg_norm, cars_norm_ohnegpm, mpg, ITERATIONEN, 500);
+		System.out.println("For " + alpha + " the best rmse is " + firstAlpha[0].columnMins() + " and the theta is " + firstAlpha[1]);
+
+		double alpha_two = 0.1;
+		FloatMatrix[] secondAlpha = regression(alpha_two, M_CARS, theta_cars, pre_prediction, mpg_norm, cars_norm_ohnegpm, mpg, ITERATIONEN, 500);
+		System.out.println("For " + alpha_two + " the best rmse is " + secondAlpha[0].columnMins() + " and the theta is " + secondAlpha[1]);
 		
-		System.out.println(predict_one.subColumnVector(mpg_norm));
-//		System.out.println(cars_norm.mul(predict_one.subColumnVector(mpg_norm)));
-//				.sub(mpg_norm));
+		double alpha_three = 1;
+		FloatMatrix[] thirdAlpha = regression(alpha_three, M_CARS, theta_cars, pre_prediction, mpg_norm, cars_norm_ohnegpm, mpg, ITERATIONEN, 500);
+		System.out.println("For " + alpha_three + " the best rmse is " + thirdAlpha[0].columnMins() + " and the theta is " + thirdAlpha[1]);
 		
-		plot(mpg); 
+		double alpha_four = 2;
+		FloatMatrix[] fourthAlpha = regression(alpha_four, M_CARS, theta_cars, pre_prediction, mpg_norm, cars_norm_ohnegpm, mpg, ITERATIONEN, 500);
+		System.out.println("For " + alpha_four + " the best rmse is " + fourthAlpha[0].columnMins() + " and the theta is " + fourthAlpha[1]);
+		
+//		plot(firstAlpha[0].toArray()); 
+//		plot(secondAlpha[0].toArray()); 
+//		plot(thirdAlpha[0].toArray()); 
+//		plot(fourthAlpha[0].toArray()); 
+	}
+
+
+
+	private static void doTheCredit(FloatMatrix credit) {
+		FloatMatrix theta_credit = FloatMatrix.rand(20, 1);
+
+		FloatMatrix amout = credit.getColumn(5);
+		FloatMatrix amout_norm = normalize(credit.getColumn(5));
+		FloatMatrix credit_norm_oA = normalize(credit.getColumns(new int[] {0,1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20}));
+		
+		System.out.println("\nCalculate the rmse for a Creditability-prediction");
+		double credit_alpha = 0.01;
+		FloatMatrix[] credit_firstAlpha = regression(credit_alpha, M_CREDIT, theta_credit, calcPredict(credit_norm_oA, theta_credit), amout_norm, credit_norm_oA, amout, ITERATIONEN, 20000);
+		System.out.println("For " + credit_alpha + " the best rmse is " + credit_firstAlpha[0].columnMins() + " and the theta is " + credit_firstAlpha[1]);
+
+		double credit_alpha2 = 0.1;
+		FloatMatrix[] credit_secondAlpha = regression(credit_alpha2, M_CREDIT, theta_credit, calcPredict(credit_norm_oA, theta_credit), amout_norm, credit_norm_oA, amout, ITERATIONEN, 20000);
+		System.out.println("For " + credit_alpha2 + " the best rmse is " + credit_secondAlpha[0].columnMins() + " and the theta is " + credit_secondAlpha[1]);
+
+		double credit_alpha3 = 0.15;
+		FloatMatrix[] credit_thirdAlpha = regression(credit_alpha3, M_CREDIT, theta_credit, calcPredict(credit_norm_oA, theta_credit), amout_norm, credit_norm_oA, amout, ITERATIONEN, 20000);
+		System.out.println("For " + credit_alpha3 + " the best rmse is " + credit_thirdAlpha[0].columnMins() + " and the theta is " + credit_thirdAlpha[1]);
+
+		double credit_alpha4 = 1;
+		FloatMatrix[] credit_fourthAlpha = regression(credit_alpha4, M_CREDIT, theta_credit, calcPredict(credit_norm_oA, theta_credit), amout_norm, credit_norm_oA, amout, ITERATIONEN, 20000);
+		System.out.println("For " + credit_alpha4 + " the best rmse is " + credit_fourthAlpha[0].columnMins() + " and the theta is " + credit_fourthAlpha[1]);
+		
+		plot(credit_thirdAlpha[0].toArray());
 	}
 
 	
@@ -137,7 +188,7 @@ public class Ue05_Sarah_Baumann extends Application {
 	 * @param column, die zu denormalisierte Spalte
 	 * @param zielwerte, die Werte, mit denen denormalisiert wird
 	 */
-	public FloatMatrix deNormalize(FloatMatrix normMatrix, FloatMatrix zielwerte){
+	public static FloatMatrix deNormalize(FloatMatrix normMatrix, FloatMatrix zielwerte){
 		FloatMatrix max = zielwerte.columnMaxs();
 		FloatMatrix min = zielwerte.columnMins();
 		return normMatrix.mulRowVector(max.subi(min)).addi(min);
@@ -148,9 +199,9 @@ public class Ue05_Sarah_Baumann extends Application {
 	 * @param prediction , calculated prediction
 	 * @param zielwerte, real values
 	 */
-	public float calcRMSE(FloatMatrix prediction, FloatMatrix zielwerte){
+	public static float calcRMSE(FloatMatrix prediction, FloatMatrix zielwerte){
 		float sum = 0;
-		sum = prediction.subRowVector(zielwerte).mul(prediction.subRowVector(zielwerte)).sum();
+		sum = prediction.sub(zielwerte).mul(prediction.sub(zielwerte)).sum();
 		return (float) Math.sqrt(sum/zielwerte.length);
 	}
 	
@@ -158,26 +209,30 @@ public class Ue05_Sarah_Baumann extends Application {
 	 * calculate prediction
 	 */
 	public static FloatMatrix calcPredict(FloatMatrix matrixNorm, FloatMatrix koeffs){
-		return matrixNorm.mulRowVector(koeffs);
+		return matrixNorm.mulRowVector(koeffs).rowSums();
 	}
 	
-	public static FloatMatrix[] regression(double alpha, int M, FloatMatrix theta, FloatMatrix prediction, FloatMatrix mpg_norm, FloatMatrix cars_norm, FloatMatrix mpg){
-//		alpha, m, theta, iteration, mpg_predict, mpg_norm, norm, mpg)
-		FloatMatrix[] result = new FloatMatrix[mpg_norm.length];
-//		diff = prediction.sub(mpg_norm);
-		diff = cars_norm.
-				prediction.subColumnVector(mpg_norm);
+	public static FloatMatrix[] regression(double alpha, int M, FloatMatrix theta, FloatMatrix pre_prediction, FloatMatrix mpg_norm, FloatMatrix cars_norm, FloatMatrix mpg, int iterationen, double rmse_pre){
+		FloatMatrix[] bestValues = new FloatMatrix[2];
+		FloatMatrix rmse = new FloatMatrix(iterationen);
+		FloatMatrix prediction = pre_prediction;
 		
-//		 diff = [pre_predict .- mpg_norm];
-//		    delta_theta = norm' * diff;
-//		    delta_theta_strich = (alpha/m) * delta_theta;
-//		    theta_new = theta .- delta_theta_strich';
-//		    pre_predict_denorm = denorm(pre_predict, mpg);
-//		    rmse_temp = sqrt(sum((pre_predict_denorm .- mpg).^2)/ length(mpg));
-//		    rmse_temp_matrix(i+1,1) = rmse_temp;
-//		    pre_predict = calculatePrediction(norm, theta_new, 0);
-//		    theta = theta_new;
-		return result;
+		double rmse_best = rmse_pre;
+		for(int i = 0; i < iterationen; i++){
+			FloatMatrix theta_new = theta.subColumnVector(cars_norm.transpose().mulRowVector((prediction.subColumnVector(mpg_norm))).transpose().columnSums().mmul((float) (alpha/M)));
+			FloatMatrix prediction_denorm = deNormalize(prediction,mpg);
+			float rmse_temp  = calcRMSE(prediction_denorm, mpg);
+			bestValues[0] = rmse.put(i, 0, rmse_temp);
+			prediction = calcPredict(cars_norm, theta_new);
+			theta = theta_new;
+			
+			// ist der RMSE besser als der vorherige?
+			if (rmse_temp < rmse_best){
+				rmse_best = rmse_temp;
+				bestValues[1] = theta_new;
+			}
+		}
+		return bestValues;
 	}
 	
 }

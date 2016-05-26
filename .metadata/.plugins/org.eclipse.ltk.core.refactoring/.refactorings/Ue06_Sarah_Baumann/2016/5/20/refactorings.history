@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename type &apos;de.htw.ml.Ue05_Sarah_Baumann&apos; to &apos;Ue06_Sarah_Baumann&apos;&#x0A;- Original project: &apos;Ue06_Sarah_Baumann&apos;&#x0A;- Original element: &apos;de.htw.ml.Ue05_Sarah_Baumann&apos;&#x0A;- Renamed element: &apos;de.htw.ml.Ue06_Sarah_Baumann&apos;&#x0A;- Update references to refactored element&#x0A;- Update textual occurrences in comments and strings" description="Rename type &apos;Ue05_Sarah_Baumann&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.type" input="/src\/main\/java&lt;de.htw.ml{Ue05_Sarah_Baumann.java[Ue05_Sarah_Baumann" matchStrategy="1" name="Ue06_Sarah_Baumann" qualified="false" references="true" similarDeclarations="false" stamp="1463941250708" textual="false" version="1.0"/>
+</session>

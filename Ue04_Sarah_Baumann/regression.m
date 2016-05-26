@@ -25,7 +25,6 @@
 function [rmse_temp_matrix, theta_best] = regression (alpha, m, theta, iteration, mpg_predict, mpg_norm, norm, mpg)
   rmse_best = 100;
   pre_predict = mpg_predict;
-  #
   #hold;
   for i = 0 : iteration-1
     diff = [pre_predict .- mpg_norm];
@@ -40,7 +39,7 @@ function [rmse_temp_matrix, theta_best] = regression (alpha, m, theta, iteration
     #plot(i, rmse_temp, plotsign)
     if(rmse_temp < rmse_best)
       theta_best = theta_new;
-      #rmse_best = rmse_temp;
+      rmse_best = rmse_temp;
     endif
   endfor
 endfunction

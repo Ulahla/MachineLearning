@@ -1,0 +1,207 @@
+package de.htw.ml;
+
+import java.io.IOException;
+import java.util.Arrays;
+
+import javax.sound.midi.Sequence;
+
+import org.jblas.FloatMatrix;
+import org.jblas.util.Random;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.stage.Stage;
+
+public class Ue06_Sarah_Baumann extends Application {
+	public static final String title = "Cars";
+	public static final String xAxisLabel = "Iterationen";
+	public static final String yAxisLabel = "rmse";
+	public static final int M_CREDIT = 1000;
+	public static final int ITERATIONEN = 100;
+	
+	public static void main(String[] args) throws IOException {
+		Random.seed(7);
+
+		// GERMAN CREDIT
+		FloatMatrix credit = FloatMatrix.loadCSVFile("german_credit_jblas.csv");
+		FloatMatrix test_no_Creditability = new FloatMatrix();
+		for(int i = 0; i < credit.rows ; i++){
+			int j = 0;
+			if (credit.get(0, 1) == 0){
+				test_no_Creditability.putRow(j,credit.getRow(j));
+				j++;
+			}
+		}
+		System.out.println(Arrays.toString(test_no_Creditability.toArray()));
+//		FloatMatrix test_Creditability = new FloatMatrix(50);
+		
+		float[] Yval = credit.getColumn(6).toArray();
+		doTheCredit(credit);
+		
+//		plot(credit_fourthAlpha[0].toArray());
+//		System.out.println(Arrays.toString(amount));
+		plot(Yval); 
+	}
+
+	private static void doTheCredit(FloatMatrix credit) {
+		FloatMatrix theta_credit = FloatMatrix.rand(20, 1);
+
+		FloatMatrix amout = credit.getColumn(5);
+		FloatMatrix amout_norm = normalize(credit.getColumn(5));
+		FloatMatrix credit_norm_oA = normalize(credit.getColumns(new int[] {0,1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20}));
+		
+		
+		double credit_alpha = 0.01;
+		FloatMatrix[] credit_firstAlpha = regression(credit_alpha, M_CREDIT, theta_credit, calcPredict(credit_norm_oA, theta_credit), amout_norm, credit_norm_oA, amout, ITERATIONEN, 20000);
+		System.out.println("For " + credit_alpha + " the best rmse is " + credit_firstAlpha[0].columnMins() + " and the theta is " + credit_firstAlpha[1]);
+
+		double credit_alpha2 = 0.1;
+		FloatMatrix[] credit_secondAlpha = regression(credit_alpha2, M_CREDIT, theta_credit, calcPredict(credit_norm_oA, theta_credit), amout_norm, credit_norm_oA, amout, ITERATIONEN, 20000);
+		System.out.println("For " + credit_alpha2 + " the best rmse is " + credit_secondAlpha[0].columnMins() + " and the theta is " + credit_secondAlpha[1]);
+
+		double credit_alpha3 = 0.15;
+		FloatMatrix[] credit_thirdAlpha = regression(credit_alpha3, M_CREDIT, theta_credit, calcPredict(credit_norm_oA, theta_credit), amout_norm, credit_norm_oA, amout, ITERATIONEN, 20000);
+		System.out.println("For " + credit_alpha3 + " the best rmse is " + credit_thirdAlpha[0].columnMins() + " and the theta is " + credit_thirdAlpha[1]);
+
+		double credit_alpha4 = 1;
+		FloatMatrix[] credit_fourthAlpha = regression(credit_alpha4, M_CREDIT, theta_credit, calcPredict(credit_norm_oA, theta_credit), amout_norm, credit_norm_oA, amout, ITERATIONEN, 20000);
+		System.out.println("For " + credit_alpha4 + " the best rmse is " + credit_fourthAlpha[0].columnMins() + " and the theta is " + credit_fourthAlpha[1]);
+	}
+
+	
+	
+	// ---------------------------------------------------------------------------------
+	// ------------ Alle Änderungen ab hier geschehen auf eigene Gefahr ----------------
+	// ---------------------------------------------------------------------------------
+	
+	/**
+	 * Equivalent zu linspace in Octave
+	 * 
+	 * @param lower
+	 * @param upper
+	 * @param num
+	 * @return
+	 */
+	private static FloatMatrix linspace(float lower, float upper, int num) {
+        float[] data = new float[num];
+        float step = Math.abs(lower-upper) / (num-1);
+        for (int i = 0; i < num; i++)
+            data[i] = lower + (step * i);
+        data[0] = lower;
+        data[data.length-1] = upper;
+        return new FloatMatrix(data);
+    }
+	
+	private static float[] dataY;
+	
+	/**
+	 * Startet die eigentliche Applikation
+	 * 
+	 * @param gdppp
+	 * @param lifespan
+	 * @param xValues
+	 * @param yValues
+	 * @param args
+	 */
+	public static void plot(float[] yValues) {
+		dataY = yValues;
+		Application.launch(new String[0]);
+	}
+	
+	/**
+	 * Zeichnet das Diagram
+	 */
+	@SuppressWarnings("unchecked")
+	@Override public void start(Stage stage) {
+
+		stage.setTitle(title);
+		
+		final NumberAxis xAxis = new NumberAxis();
+		xAxis.setLabel(xAxisLabel);
+        final NumberAxis yAxis = new NumberAxis();
+        yAxis.setLabel(yAxisLabel);
+        
+		final LineChart<Number, Number> sc = new LineChart<>(xAxis, yAxis);
+
+		XYChart.Series<Number, Number> series1 = new XYChart.Series<>();
+		series1.setName("Data");
+		for (int i = 0; i < dataY.length; i++) {
+			series1.getData().add(new XYChart.Data<Number, Number>(i, dataY[i]));
+		}
+
+		sc.setAnimated(false);
+		sc.setCreateSymbols(true);
+
+		sc.getData().addAll(series1);
+
+		Scene scene = new Scene(sc, 500, 400);
+		stage.setScene(scene);
+		stage.show();
+    }
+	
+	/**
+	 * Normalisiert Werte
+	 * @param column - column, which should get normalized
+	 */
+	public static FloatMatrix normalize(FloatMatrix matrix){
+		FloatMatrix max = matrix.columnMaxs();
+		FloatMatrix min = matrix.columnMins();
+		return matrix.subRowVector(min.transpose()).divRowVector(max.sub(min));
+	}
+	
+	/**
+	 * Denormalisiert Werte
+	 * @param column, die zu denormalisierte Spalte
+	 * @param zielwerte, die Werte, mit denen denormalisiert wird
+	 */
+	public static FloatMatrix deNormalize(FloatMatrix normMatrix, FloatMatrix zielwerte){
+		FloatMatrix max = zielwerte.columnMaxs();
+		FloatMatrix min = zielwerte.columnMins();
+		return normMatrix.mulRowVector(max.subi(min)).addi(min);
+	}
+	
+	/**
+	 * calculates rmse for a column
+	 * @param prediction , calculated prediction
+	 * @param zielwerte, real values
+	 */
+	public static float calcRMSE(FloatMatrix prediction, FloatMatrix zielwerte){
+		float sum = 0;
+		sum = prediction.sub(zielwerte).mul(prediction.sub(zielwerte)).sum();
+		return (float) Math.sqrt(sum/zielwerte.length);
+	}
+	
+	/**
+	 * calculate prediction
+	 */
+	public static FloatMatrix calcPredict(FloatMatrix matrixNorm, FloatMatrix koeffs){
+		return matrixNorm.mulRowVector(koeffs).rowSums();
+	}
+	
+	public static FloatMatrix[] regression(double alpha, int M, FloatMatrix theta, FloatMatrix pre_prediction, FloatMatrix mpg_norm, FloatMatrix cars_norm, FloatMatrix mpg, int iterationen, double rmse_pre){
+		FloatMatrix[] bestValues = new FloatMatrix[2];
+		FloatMatrix rmse = new FloatMatrix(iterationen);
+		FloatMatrix prediction = pre_prediction;
+		
+		double rmse_best = rmse_pre;
+		for(int i = 0; i < iterationen; i++){
+			FloatMatrix theta_new = theta.subColumnVector(cars_norm.transpose().mulRowVector((prediction.subColumnVector(mpg_norm))).transpose().columnSums().mmul((float) (alpha/M)));
+			FloatMatrix prediction_denorm = deNormalize(prediction,mpg);
+			float rmse_temp  = calcRMSE(prediction_denorm, mpg);
+			bestValues[0] = rmse.put(i, 0, rmse_temp);
+			prediction = calcPredict(cars_norm, theta_new);
+			theta = theta_new;
+			
+			// ist der RMSE besser als der vorherige?
+			if (rmse_temp < rmse_best){
+				rmse_best = rmse_temp;
+				bestValues[1] = theta_new;
+			}
+		}
+		return bestValues;
+	}
+	
+}
